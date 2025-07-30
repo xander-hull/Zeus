@@ -1,0 +1,206 @@
+"use client";
+
+import Link from "next/link";
+import { createPageUrl } from "@/utils";
+import { 
+Code2, 
+History, 
+Settings,
+Menu,
+Zap,
+LogOut,
+User as UserIcon,
+Calculator,
+Palette,
+Hash,
+FileJson,
+Globe,
+Database,
+Terminal
+} from "lucide-react";
+import useAppLevelAuth from "@/hooks/useAppLevelAuth";
+import React, { useState, useEffect } from 'react';
+import { User as UserEntity } from "@/entities/User";
+import {
+Sidebar,
+SidebarContent,
+SidebarFooter,
+SidebarHeader,
+SidebarInset,
+SidebarMenu,
+SidebarMenuButton,
+SidebarMenuItem,
+SidebarProvider,
+SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+interface LayoutProps {
+children: React.ReactNode;
+currentPageName?: string;
+}
+
+export default function Layout({ children, currentPageName }: LayoutProps) {
+const { isLoggedIn, logout } = useAppLevelAuth();
+const pathname = usePathname();
+const router = useRouter();
+const [currentUser, setCurrentUser] = useState<any>(null);
+
+useEffect(() => {
+  if (isLoggedIn) {
+    const fetchUser = async () => {
+      try {
+        const user = await UserEntity.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.warn("Layout: Could not fetch current user", error);
+        setCurrentUser(null);
+      }
+    };
+    fetchUser();
+  } else {
+    setCurrentUser(null);
+  }
+}, [isLoggedIn]);
+
+if (currentPageName === "Landing") {
+  return <>{children}</>;
+}
+
+const navigation = [
+  { name: "Dashboard", path: "Dashboard", icon: Zap },
+  { name: "Code Analyzer", path: "CodeAnalyzer", icon: Code2 },
+  { name: "History", path: "History", icon: History },
+  { name: "Color Picker", path: "ColorPicker", icon: Palette },
+  { name: "Hash Generator", path: "HashGenerator", icon: Hash },
+  { name: "JSON Formatter", path: "JsonFormatter", icon: FileJson },
+  { name: "URL Encoder", path: "UrlEncoder", icon: Globe },
+  { name: "Base64 Tools", path: "Base64Tools", icon: Database },
+  { name: "Regex Tester", path: "RegexTester", icon: Terminal },
+  { name: "Calculator", path: "Calculator", icon: Calculator },
+];
+
+const handleLogout = async () => {
+  await logout();
+  router.push(createPageUrl("login"));
+};
+
+const getCurrentPage = () => {
+  if (currentPageName) return currentPageName;
+  const path = pathname?.replace('/', '') || 'Dashboard';
+  return path === '' ? 'Dashboard' : path;
+};
+
+const currentPage = getCurrentPage();
+
+const UserProfileSection = () => {
+  if (!currentUser) return null;
+
+  const initials = `${currentUser.firstName?.[0] || ""}${currentUser.lastName?.[0] || "U"}`.toUpperCase();
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      <Avatar className="h-9 w-9 floating-element">
+        <AvatarFallback className="bg-gradient-to-r from-yellow-400 to-purple-500 text-white font-bold">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <div className="grid flex-1 text-left text-sm leading-tight">
+        <span className="truncate font-semibold text-white">
+          {currentUser.firstName} {currentUser.lastName}
+        </span>
+        <span className="truncate text-xs text-gray-300">{currentUser.email}</span>
+      </div>
+    </div>
+  );
+};
+
+if (!isLoggedIn) {
+  return (
+    <div className="flex h-screen w-screen items-center justify-center">
+      <div className="zeus-card p-8 rounded-xl">
+        <div className="text-center">
+          <Zap className="h-16 w-16 mx-auto mb-4 lightning-icon text-yellow-500" />
+          <h1 className="text-2xl font-bold zeus-gradient mb-2">Zeus</h1>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+return (
+  <SidebarProvider>
+    <Sidebar className="zeus-sidebar border-r border-gray-700">
+      <SidebarHeader className="border-b border-gray-700 p-4">
+        <Link href={createPageUrl('Dashboard')} className="flex items-center gap-2.5 group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-yellow-400 to-purple-500 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <Zap className="h-6 w-6 lightning-icon" />
+          </div>
+          <span className="text-xl font-bold zeus-gradient">Zeus</span>
+        </Link>
+      </SidebarHeader>
+      
+      <SidebarContent className="p-4">
+        <SidebarMenu className="space-y-2">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPage === item.path;
+            return (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton 
+                  asChild 
+                  className={`zeus-nav-item ${isActive ? 'active' : ''} p-3`}
+                >
+                  <Link href={createPageUrl(item.path)} className="flex items-center gap-3">
+                    <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-gray-300'}`} />
+                    <span className={`font-medium ${isActive ? 'text-white' : 'text-gray-300'}`}>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+      
+      <SidebarFooter className="border-t border-gray-700 p-2">
+        <UserProfileSection />
+        <SidebarMenu className="space-y-1">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild className="zeus-nav-item p-3">
+              <Link href={createPageUrl('settings')} className="flex items-center gap-3">
+                <Settings className="h-5 w-5 text-gray-300" />
+                <span className="font-medium text-gray-300">Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="zeus-nav-item p-3 flex items-center gap-3">
+              <LogOut className="h-5 w-5 text-gray-300" />
+              <span className="font-medium text-gray-300">Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+    
+    <SidebarInset>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/20 px-4 md:hidden backdrop-blur-sm bg-white/10">
+        <SidebarTrigger className="text-gray-800" />
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-yellow-400 to-purple-500 text-white">
+            <Zap className="h-4 w-4 lightning-icon" />
+          </div>
+          <h1 className="text-lg font-bold zeus-gradient">Zeus</h1>
+        </div>
+      </header>
+      
+      <main className="flex-1 p-4 md:p-6">
+        {children}
+      </main>
+    </SidebarInset>
+  </SidebarProvider>
+);
+}
