@@ -1,0 +1,102 @@
+{
+  "name": "CodeReview",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title or name for the code review"
+    },
+    "code": {
+      "type": "string",
+      "description": "The source code to be analyzed"
+    },
+    "language": {
+      "type": "string",
+      "description": "Programming language of the code, detected automatically"
+    },
+    "analysisResult": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "line": {
+                "type": "number"
+              },
+              "column": {
+                "type": "number"
+              },
+              "message": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "line": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "improvedCode": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "linesAnalyzed": {
+          "type": "number"
+        },
+        "fixedCode": {
+          "type": "string",
+          "description": "The full code with all suggestions applied."
+        }
+      },
+      "description": "Analysis results from code review"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Status of the code review"
+    }
+  },
+  "required": [
+    "title",
+    "code",
+    "language"
+  ],
+  "x-accessControl": {
+    "permissions": {
+      "read": "creator",
+      "write": "creator"
+    }
+  }
+}
