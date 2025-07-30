@@ -1,0 +1,209 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+interface ZeusAnimationProps {
+  onComplete: () => void;
+}
+
+export default function ZeusAnimation({ onComplete }: ZeusAnimationProps) {
+  const [stage, setStage] = useState<'cloud' | 'zeus' | 'throw' | 'splash' | 'fade'>('cloud');
+
+  useEffect(() => {
+    const timeline = [
+      { stage: 'cloud', duration: 800 },
+      { stage: 'zeus', duration: 1200 },
+      { stage: 'throw', duration: 800 },
+      { stage: 'splash', duration: 1000 },
+      { stage: 'fade', duration: 1500 }
+    ];
+
+    let currentIndex = 0;
+    const runTimeline = () => {
+      if (currentIndex < timeline.length) {
+        const current = timeline[currentIndex];
+        setStage(current.stage as any);
+        
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex < timeline.length) {
+            runTimeline();
+          } else {
+            onComplete();
+          }
+        }, current.duration);
+      }
+    };
+
+    runTimeline();
+  }, [onComplete]);
+
+  return (
+    <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
+      {/* Container for Zeus and Cloud to manage layering */}
+      <div className="absolute top-0 right-0 w-[200px] h-[160px]">
+        {/* Realistic Zeus Character (renders BEHIND the cloud) */}
+        <div className={`absolute top-0 right-6 transition-all duration-1200 ${
+          stage === 'zeus' || stage === 'throw' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-75 translate-y-8'
+        } ${stage === 'throw' ? 'zeus-throwing' : ''}`}>
+          <div className="relative">
+            <svg width="120" height="140" viewBox="0 0 120 140" className="drop-shadow-2xl">
+              <defs>
+                <radialGradient id="zeusGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="togaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="50%" stopColor="#f8fafc" />
+                  <stop offset="100%" stopColor="#e2e8f0" />
+                </linearGradient>
+                <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="50%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#d97706" />
+                </linearGradient>
+              </defs>
+              
+              <circle cx="60" cy="70" r="65" fill="url(#zeusGlow)" className="animate-pulse" />
+              <path d="M25,80 Q20,65 25,50 L35,45 Q45,35 60,35 Q75,35 85,45 L95,50 Q100,65 95,80 L100,110 Q100,125 85,130 L35,130 Q20,125 25,110 Z" fill="url(#togaGradient)" stroke="#cbd5e1" strokeWidth="1" />
+              <ellipse cx="25" cy="65" rx="8" ry="20" fill="url(#skinGradient)" transform="rotate(-20 25 65)" />
+              <ellipse cx="95" cy="65" rx="8" ry="20" fill="url(#skinGradient)" transform="rotate(20 95 65)" />
+              <circle cx="60" cy="35" r="18" fill="url(#skinGradient)" />
+              <path d="M45,42 Q60,52 75,42 Q80,60 60,65 Q40,60 45,42" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="0.5" />
+              <path d="M42,20 L48,8 L54,15 L60,5 L66,15 L72,8 L78,20 Q75,25 60,25 Q45,25 42,20" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
+              <circle cx="60" cy="12" r="3" fill="#dc2626" />
+              <circle cx="54" cy="30" r="2.5" fill="#1e40af" />
+              <circle cx="66" cy="30" r="2.5" fill="#1e40af" />
+              <circle cx="54" cy="29" r="1" fill="#ffffff" />
+              <circle cx="66" cy="29" r="1" fill="#ffffff" />
+              
+              {stage === 'zeus' && (
+                <g transform="translate(85,55) scale(1.2)" className="lightning-charge">
+                  <defs>
+                    <linearGradient id="flashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fef08a" />
+                      <stop offset="30%" stopColor="#fbbf24" />
+                      <stop offset="70%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>
+                    <filter id="lightningGlow"><feGaussianBlur stdDeviation="2" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>
+                  <path d="M15,0 L25,0 L15,20 L30,20 L10,45 L5,25 L15,25 Z" fill="url(#flashGradient)" stroke="#fbbf24" strokeWidth="1" filter="url(#lightningGlow)" className="animate-pulse" />
+                  <path d="M17,2 L23,2 L17,18 L27,18 L12,40 L8,23 L17,23 Z" fill="#fef08a" opacity="0.8" />
+                </g>
+              )}
+              <path d="M20,50 Q15,70 25,90 Q30,110 20,125 Q40,120 50,100 Q55,80 45,60" fill="#dc2626" opacity="0.7" className={stage === 'throw' ? 'cape-flutter' : ''} />
+            </svg>
+          </div>
+        </div>
+
+        {/* Dramatic Cloud Formation (renders ON TOP of Zeus) */}
+        <div className={`absolute top-4 right-4 transition-all duration-800 ${
+          stage === 'cloud' ? 'opacity-100 scale-100' : stage === 'zeus' ? 'opacity-90 scale-110' : 'opacity-0 scale-75'
+        }`}>
+          <svg width="180" height="120" viewBox="0 0 180 120" className="drop-shadow-2xl">
+            <defs>
+              <radialGradient id="stormCloudGradient" cx="50%" cy="30%" r="70%"><stop offset="0%" stopColor="#f8fafc" /><stop offset="40%" stopColor="#e2e8f0" /><stop offset="80%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#64748b" /></radialGradient>
+              <filter id="cloudGlow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <path d="M30,70 Q25,45 50,45 Q65,25 90,40 Q110,30 125,50 Q145,45 150,65 Q155,80 140,85 L45,85 Q25,85 30,70 Z" fill="url(#stormCloudGradient)" filter="url(#cloudGlow)" className={stage === 'cloud' ? 'animate-pulse' : ''} />
+            {stage === 'zeus' && (
+              <><path d="M80,35 L85,45 L75,50 L90,60" stroke="#fbbf24" strokeWidth="2" fill="none" opacity="0.8" className="animate-pulse" /><path d="M110,40 L105,50 L115,55 L100,65" stroke="#f59e0b" strokeWidth="1.5" fill="none" opacity="0.6" className="animate-pulse" /></>
+            )}
+          </svg>
+        </div>
+      </div>
+
+      {/* Flash-Style Lightning Bolt Flight */}
+      {stage === 'throw' && (
+        <div className="lightning-flash-flight">
+          <svg width="60" height="80" viewBox="0 0 60 80" className="drop-shadow-2xl">
+            <defs>
+              <linearGradient id="flightGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fef08a" /><stop offset="25%" stopColor="#fbbf24" /><stop offset="50%" stopColor="#f59e0b" /><stop offset="75%" stopColor="#dc2626" /><stop offset="100%" stopColor="#b91c1c" /></linearGradient>
+              <filter id="flightGlow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <path d="M30,5 L45,5 L25,35 L50,35 L15,75 L10,45 L25,45 Z" fill="url(#flightGradient)" stroke="#fbbf24" strokeWidth="2" filter="url(#flightGlow)" className="animate-spin" />
+            <path d="M32,7 L42,7 L27,32 L45,32 L18,68 L13,43 L27,43 Z" fill="#fef08a" opacity="0.9" />
+            <path d="M34,9 L40,9 L29,30 L42,30 L21,63 L16,41 L29,41 Z" fill="#ffffff" opacity="0.6" />
+          </svg>
+        </div>
+      )}
+
+      {/* REALISTIC Flashbang Explosion */}
+      {(stage === 'splash' || stage === 'fade') && (
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-white flashbang-main-flash" />
+          <div className="absolute inset-0 bg-gradient-radial from-yellow-200 via-orange-300 to-transparent flashbang-glow-effect" />
+          <div className="absolute inset-0 bg-black flashbang-afterimage-effect" />
+        </div>
+      )}
+
+      <style jsx>{`
+        .zeus-throwing { animation: zeus-throw-motion 800ms ease-out forwards; }
+        @keyframes zeus-throw-motion {
+          0% { transform: translateY(0) rotate(0deg); }
+          30% { transform: translateY(-10px) rotate(-5deg); }
+          60% { transform: translateY(-5px) rotate(10deg); }
+          100% { transform: translateY(0) rotate(0deg); }
+        }
+        .lightning-charge { animation: charge-energy 1200ms ease-in-out infinite; }
+        @keyframes charge-energy {
+          0%, 100% { transform: translate(85px, 55px) scale(1.2); filter: brightness(1); }
+          50% { transform: translate(85px, 55px) scale(1.4); filter: brightness(1.5); }
+        }
+        .cape-flutter { animation: cape-wave 800ms ease-in-out; }
+        @keyframes cape-wave {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-5px); }
+        }
+        .lightning-flash-flight {
+          position: absolute;
+          top: 60px;
+          right: 100px;
+          animation: flash-lightning-flight 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes flash-lightning-flight {
+          0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+          20% { transform: translate(-20vw, 10vh) rotate(90deg) scale(1.3); opacity: 1; }
+          50% { transform: translate(-40vw, 25vh) rotate(180deg) scale(1.5); opacity: 1; }
+          80% { transform: translate(-50vw, 35vh) rotate(270deg) scale(1.2); opacity: 0.8; }
+          100% { transform: translate(-50vw, 40vh) rotate(360deg) scale(0.5); opacity: 0; }
+        }
+        
+        /* Realistic Flashbang Styles */
+        .flashbang-main-flash {
+          animation: flashbang-whiteout 1000ms ease-out forwards;
+        }
+        @keyframes flashbang-whiteout {
+          0% { opacity: 0; }
+          5% { opacity: 1; } /* Instant on */
+          30% { opacity: 0.8; }
+          100% { opacity: 0; }
+        }
+        .flashbang-glow-effect {
+          animation: flashbang-glow 800ms ease-out forwards;
+          animation-delay: 50ms; /* Starts just after the white flash */
+        }
+        @keyframes flashbang-glow {
+          0% { transform: scale(0.1); opacity: 0.9; }
+          100% { transform: scale(4); opacity: 0; }
+        }
+        .flashbang-afterimage-effect {
+          animation: flashbang-afterimage 1500ms linear forwards;
+          animation-delay: 100ms; /* Starts during the main flash */
+        }
+        @keyframes flashbang-afterimage {
+          0% { opacity: 0; }
+          10% { opacity: 0.2; } /* Simulates spots in vision */
+          80% { opacity: 0.1; }
+          100% { opacity: 0; }
+        }
+
+        .bg-gradient-radial {
+          background: radial-gradient(circle, var(--tw-gradient-stops));
+        }
+      `}</style>
+    </div>
+  );
+}
